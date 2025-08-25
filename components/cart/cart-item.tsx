@@ -5,7 +5,7 @@ import { useCart } from "@/contexts/cart-context"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import type { CartItem as CartItemType } from "@/lib/cart"
+import type { CartItem as CartItemType } from "@/lib/cart-client"
 
 interface CartItemProps {
   item: CartItemType

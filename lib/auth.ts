@@ -1,51 +1,53 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export async function getUser() {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return null
+    return null;
   }
 
-  return user
+  return user;
 }
 
-export const getCurrentUser = getUser
-
 export async function requireAuth() {
-  const user = await getUser()
+  const user = await getUser();
 
   if (!user) {
-    redirect("/auth/login")
+    redirect("/auth/login");
   }
 
-  return user
+  return user;
 }
 
 export async function getUserProfile(userId: string) {
-  const supabase = await createClient()
-  const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
+  const supabase = createClient();
+  const { data: profile, error } = await (await supabase)
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
 
   if (error) {
-    console.error("Error fetching user profile:", error)
-    return null
+    console.error("Error fetching user profile:", error);
+    return null;
   }
 
-  return profile
+  return profile;
 }
 
 export async function requireAdmin() {
-  const user = await requireAuth()
-  const profile = await getUserProfile(user.id)
+  const user = await requireAuth();
+  const profile = await getUserProfile(user.id);
 
   if (!profile || !["admin", "editor"].includes(profile.role)) {
-    redirect("/")
+    redirect("/");
   }
 
-  return { user, profile }
+  return { user, profile };
 }

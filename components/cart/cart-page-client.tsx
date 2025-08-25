@@ -6,7 +6,7 @@ import { useCart } from "@/contexts/cart-context"
 import { CartItem } from "./cart-item"
 import { ShoppingBag, ArrowRight, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import type { Cart } from "@/lib/cart"
+import type { Cart } from "@/lib/cart-client"
 
 interface CartPageClientProps {
   initialCart: Cart | null

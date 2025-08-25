@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { getCart, addToCart as addToCartApi, updateCartItem, removeFromCart, clearCart, type Cart } from "@/lib/cart"
+import { getCart, addToCart as addToCartApi, updateCartItem, removeFromCart, clearCart, type Cart } from "@/lib/cart-client"
 import { useToast } from "@/hooks/use-toast"
 
 interface CartContextType {

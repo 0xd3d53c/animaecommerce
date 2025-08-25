@@ -19,8 +19,8 @@ yarn-error.log*
 # env files
 .env*
 
-# vercel
-.vercel
+package-lock.json
+pnpm-lock.yaml
 
 # typescript
 *.tsbuildinfo

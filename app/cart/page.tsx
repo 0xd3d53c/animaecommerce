@@ -1,5 +1,5 @@
 import { getUser } from "@/lib/auth"
-import { getServerCart } from "@/lib/cart"
+import { getServerCart } from "@/lib/cart-server" 
 import { CartPageClient } from "@/components/cart/cart-page-client"
 import { SiteHeader } from "@/components/layout/site-header"
 import { SiteFooter } from "@/components/layout/site-footer"

@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCart } from "@/contexts/cart-context"
 import { createOrder, processPayment } from "@/lib/orders"
 import { useToast } from "@/hooks/use-toast"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth/client";
 import { AlertCircle, LogIn } from "lucide-react"
 import Link from "next/link"
 
