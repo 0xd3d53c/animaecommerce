@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client"
 
 interface Order {
   id: string
-  total: number
+  total_amount: number // The property is total_amount
   status: string
   created_at: string
   first_name: string
@@ -27,7 +27,10 @@ export function OrderSuccessContent() {
 
   useEffect(() => {
     async function fetchOrder() {
-      if (!orderId) return
+      if (!orderId) {
+        setLoading(false);
+        return
+      };
 
       const supabase = createClient()
       const { data, error } = await supabase.from("orders").select("*").eq("id", orderId).single()
@@ -81,7 +84,8 @@ export function OrderSuccessContent() {
             </div>
             <div>
               <span className="text-muted-foreground">Total Amount:</span>
-              <p className="font-medium">₹{order.total.toLocaleString()}</p>
+              {/* CORRECTED: Changed order.total to order.total_amount */}
+              <p className="font-medium">₹{order.total_amount.toLocaleString()}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Status:</span>
@@ -119,7 +123,7 @@ export function OrderSuccessContent() {
             <div>
               <h3 className="font-medium">Need Help?</h3>
               <p className="text-sm text-muted-foreground">
-                Contact us on WhatsApp at +91 80112 55880 for any questions.
+                Contact us on WhatsApp at +91 8011255880 for any questions.
               </p>
             </div>
           </div>

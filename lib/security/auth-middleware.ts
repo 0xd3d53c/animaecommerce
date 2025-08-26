@@ -1,8 +1,21 @@
 import { createClient } from "@/lib/supabase/server"
-import type { NextRequest } from "next/server"
+import type { NextRequest, NextResponse } from "next/server"
 import { createErrorResponse } from "./headers"
+import type { User } from "@supabase/supabase-js"
 
-export async function requireApiAuth(request: NextRequest) {
+// Define explicit types for the authentication result
+type AuthSuccess = {
+  success: true;
+  user: User;
+  profile?: { role: string };
+};
+type AuthFailure = {
+  success: false;
+  response: NextResponse;
+};
+type AuthResult = AuthSuccess | AuthFailure;
+
+export async function requireApiAuth(request: NextRequest): Promise<AuthResult> {
   try {
     const supabase = await createClient()
     const {
@@ -20,7 +33,7 @@ export async function requireApiAuth(request: NextRequest) {
   }
 }
 
-export async function requireApiAdmin(request: NextRequest) {
+export async function requireApiAdmin(request: NextRequest): Promise<AuthResult> {
   const authResult = await requireApiAuth(request)
 
   if (!authResult.success) {
@@ -35,7 +48,8 @@ export async function requireApiAdmin(request: NextRequest) {
       return { success: false, response: createErrorResponse("Admin access required", 403) }
     }
 
-    return { success: true, user: authResult.user, profile }
+    // Return the successful result, now including the profile
+    return { ...authResult, profile }
   } catch (error) {
     return { success: false, response: createErrorResponse("Authorization failed", 403) }
   }
