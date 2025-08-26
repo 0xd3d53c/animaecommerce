@@ -27,7 +27,7 @@ const checkoutSchema = z.object({
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   postalCode: z.string().min(6, "Postal code must be at least 6 digits"),
-  shippingMethod: z.enum(["standard", "express", "pickup"]),
+  shippingMethod: z.enum(["standard", "expedited", "pickup"]),
   paymentMethod: z.enum(["razorpay", "cod"]),
 })
 
@@ -37,7 +37,7 @@ export function CheckoutForm() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { items, total, clearCart } = useCart()
+  const { cart, clearCart } = useCart()
   const router = useRouter()
   const { toast } = useToast()
 
@@ -55,7 +55,6 @@ export function CheckoutForm() {
         const currentUser = await getCurrentUser()
         setUser(currentUser)
 
-        // Pre-fill form with user data if available
         if (currentUser) {
           form.setValue("email", currentUser.email || "")
           form.setValue("firstName", currentUser.user_metadata?.first_name || "")
@@ -84,7 +83,6 @@ export function CheckoutForm() {
             You need to be logged in to complete your purchase. Please sign in or create an account to continue.
           </AlertDescription>
         </Alert>
-
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/auth/login">
             <Button className="w-full sm:w-auto">
@@ -98,7 +96,6 @@ export function CheckoutForm() {
             </Button>
           </Link>
         </div>
-
         <div className="text-center text-sm text-muted-foreground">
           <p>Your cart items will be saved and available after you sign in.</p>
         </div>
@@ -107,7 +104,7 @@ export function CheckoutForm() {
   }
 
   const onSubmit = async (data: CheckoutFormData) => {
-    if (items.length === 0) {
+    if (!cart || cart.items.length === 0) {
       toast({
         title: "Cart is empty",
         description: "Please add items to your cart before checkout.",
@@ -119,20 +116,34 @@ export function CheckoutForm() {
     setIsProcessing(true)
 
     try {
-      // Create order in database
+      const { items, total } = cart
+
+      // --- Start of Financial Calculations ---
+      const subtotal = total;
+      const shippingAmount = data.shippingMethod === 'standard' ? 99 : data.shippingMethod === 'expedited' ? 199 : 0;
+      const taxAmount = Math.round(subtotal * 0.18); // 18% GST
+      const finalTotal = subtotal + shippingAmount + taxAmount;
+      // --- End of Financial Calculations ---
+
       const order = await createOrder({
-        items,
+        items: items.map(item => ({
+            id: item.product_id,
+            name: item.product.title,
+            price: item.unit_price,
+            quantity: item.quantity,
+            image: item.product.product_media?.find(m => m.is_primary)?.storage_path,
+            variant: item.variant_id ? { id: item.variant_id, attributes: {} } : undefined
+        })),
         customerInfo: data,
-        total,
+        total: subtotal, // Pass the subtotal to createOrder
         shippingMethod: data.shippingMethod,
         paymentMethod: data.paymentMethod,
       })
 
       if (data.paymentMethod === "razorpay") {
-        // Process Razorpay payment
         const paymentResult = await processPayment({
           orderId: order.id,
-          amount: total,
+          amount: finalTotal, // CORRECT: Pass the final calculated total
           customerInfo: data,
         })
 
@@ -143,7 +154,6 @@ export function CheckoutForm() {
           throw new Error(paymentResult.error || "Payment failed")
         }
       } else {
-        // Cash on delivery
         clearCart()
         router.push(`/order-success?orderId=${order.id}`)
       }
@@ -255,7 +265,7 @@ export function CheckoutForm() {
             </Label>
           </div>
           <div className="flex items-center space-x-2 p-3 border rounded-lg">
-            <RadioGroupItem value="express" id="express" />
+            <RadioGroupItem value="expedited" id="expedited" />
             <Label htmlFor="express" className="flex-1 cursor-pointer">
               <div className="flex justify-between">
                 <span>Express Shipping (2-3 days)</span>
