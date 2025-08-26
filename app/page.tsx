@@ -41,12 +41,13 @@ export default async function HomePage() {
       <SiteHeader />
 
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
+      <section className="relative h-[70vh] flex items-center justify-center text-center text-white my-8 rounded-lg overflow-hidden">
         <Image
           src="/TRENDLIS.png"
           alt="Premium products background"
           fill
-          className="object-cover -z-10 blur-sm brightness-90"
+          className="object-cover "
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 -z-10"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
