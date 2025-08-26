@@ -58,3 +58,40 @@ CREATE TRIGGER update_contact_submissions_updated_at
   BEFORE UPDATE ON contact_submissions
   FOR EACH ROW
   EXECUTE FUNCTION update_contact_submissions_updated_at();
+
+  -- Step 1: Disassociate all existing products from their categories.
+UPDATE products SET category_id = NULL;
+
+-- Step 2: Delete all old categories.
+DELETE FROM categories;
+
+-- Step 3: Insert the new, simplified, top-level categories without descriptions.
+-- The sort_order has been made sequential.
+INSERT INTO categories (name, slug, sort_order) VALUES
+('Muga Silk', 'muga-silk', 1),
+('Eri Silk', 'eri-silk', 2),
+('Pat Silk', 'pat-silk', 3),
+('Cotton', 'cotton', 4),
+('Handloom', 'handloom', 5),
+('Hand-embroidered', 'hand-embroidered', 6),
+('Zari Woven', 'zari-woven', 7),
+('Traditional', 'traditional', 8),
+('Bridal', 'bridal', 9),
+('Casual', 'casual', 10);
+
+-- Step 4: Re-associate existing products with the new categories based on product titles.
+-- Fabric Types
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'muga-silk') WHERE title ILIKE '%Muga Silk%';
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'eri-silk') WHERE title ILIKE '%Eri Silk%';
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'pat-silk') WHERE title ILIKE '%Pat Silk%';
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'cotton') WHERE title ILIKE '%Cotton%';
+
+-- Workmanship & Design
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'handloom') WHERE title ILIKE '%Handloom%';
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'hand-embroidered') WHERE title ILIKE '%embroidered%';
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'zari-woven') WHERE title ILIKE '%Zari%';
+
+-- Occasion & Style
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'traditional') WHERE title ILIKE '%Traditional%';
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'bridal') WHERE title ILIKE '%Bridal%';
+UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'casual') WHERE title ILIKE '%Casual%';

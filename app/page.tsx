@@ -97,7 +97,6 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categories.map((category) => (
               <Link key={category.id} href={`/categories/${category.slug}`}>
-                {/* START: MODIFIED CATEGORY CARD */}
                 <Card className="group h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                   <div className="relative h-48 w-full">
                     <Image
@@ -107,15 +106,18 @@ export default async function HomePage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
-                  <CardContent className="p-4 flex flex-col flex-grow">
-                    <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">{category.description}</p>
-                    <Button variant="outline" className="w-full mt-auto bg-transparent">
+                  {/* START: MODIFIED CARD CONTENT */}
+                  <CardContent className="p-4 flex flex-col flex-grow text-center">
+                    <div className="flex-grow flex flex-col justify-center">
+                        <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
+                    </div>
+                    <Button variant="outline" className="w-full mt-4 bg-transparent">
                       View Products
                     </Button>
                   </CardContent>
+                  {/* END: MODIFIED CARD CONTENT */}
                 </Card>
-                {/* END: MODIFIED CATEGORY CARD */}
               </Link>
             ))}
           </div>
@@ -130,11 +132,10 @@ export default async function HomePage() {
             <p className="text-muted-foreground max-w-2xl mx-auto">Check out our most popular and trending products.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product) => {
+            {featuredProducts.map((product: any) => {
               const primaryImage =
                 product.product_media?.find((media: any) => media.is_primary) || product.product_media?.[0];
               return (
-                // START: MODIFIED FEATURED PRODUCT CARD
                 <Card key={product.id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                   <Link href={`/products/${product.slug}`}>
                     <div className="aspect-square relative overflow-hidden">
@@ -177,7 +178,6 @@ export default async function HomePage() {
                     </Button>
                   </CardContent>
                 </Card>
-                // END: MODIFIED FEATURED PRODUCT CARD
               );
             })}
           </div>
