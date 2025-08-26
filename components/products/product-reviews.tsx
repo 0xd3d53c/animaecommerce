@@ -5,35 +5,72 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, ThumbsUp } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
+
+interface Review {
+  id: string
+  rating: number
+  title: string | null
+  body: string | null
+  created_at: string
+  helpful_count: number
+  profiles: {
+    full_name: string | null
+    avatar_url: string | null
+  } | null
+}
 
 interface ProductReviewsProps {
   productId: string
+  reviews: Review[]
 }
 
-// Mock data - in real app, this would come from Supabase
-const mockReviews = [
-  {
-    id: "1",
-    user: { name: "Priya Sharma", avatar: null },
-    rating: 5,
-    title: "Absolutely Beautiful!",
-    body: "The craftsmanship is exceptional. The colors are vibrant and the fabric feels premium. Worth every penny!",
-    created_at: "2024-01-15",
-    helpful_count: 12,
-  },
-  {
-    id: "2",
-    user: { name: "Rajesh Kumar", avatar: null },
-    rating: 4,
-    title: "Great quality, fast delivery",
-    body: "Beautiful mekhela chador with intricate work. The artisan's skill is evident in every thread. Highly recommended!",
-    created_at: "2024-01-10",
-    helpful_count: 8,
-  },
-]
+export function ProductReviews({ productId, reviews: initialReviews }: ProductReviewsProps) {
+  const [reviews, setReviews] = useState(initialReviews)
+  const { toast } = useToast()
+  const supabase = createClient()
 
-export function ProductReviews({ productId }: ProductReviewsProps) {
-  const [reviews] = useState(mockReviews)
+  const handleHelpfulClick = async (reviewId: string, currentHelpfulCount: number) => {
+    const { data, error } = await supabase
+      .from("reviews")
+      .update({ helpful_count: currentHelpfulCount + 1 })
+      .eq("id", reviewId)
+      .select()
+      .single()
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Could not register your vote. Please try again.",
+        variant: "destructive",
+      })
+    } else if (data) {
+      setReviews(reviews.map((r) => (r.id === reviewId ? { ...r, helpful_count: data.helpful_count } : r)))
+      toast({
+        title: "Thank you!",
+        description: "Your feedback is appreciated.",
+      })
+    }
+  }
+
+  if (!initialReviews || initialReviews.length === 0) {
+    return (
+      <section className="mb-16">
+        <Card>
+          <CardHeader>
+            <CardTitle>Customer Reviews</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center py-12">
+            <p className="text-muted-foreground mb-4">No reviews yet for this product.</p>
+            <Button variant="outline" className="bg-transparent">
+              Be the first to write a review
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+    )
+  }
 
   const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
   const ratingCounts = [5, 4, 3, 2, 1].map((rating) => reviews.filter((review) => review.rating === rating).length)
@@ -64,7 +101,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               <p className="text-sm text-muted-foreground">Based on {reviews.length} reviews</p>
             </div>
 
-            {/* Rating Breakdown */}
             <div className="space-y-2">
               {[5, 4, 3, 2, 1].map((rating, index) => (
                 <div key={rating} className="flex items-center gap-2">
@@ -82,6 +118,9 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 </div>
               ))}
             </div>
+            <Button variant="outline" className="w-full bg-transparent mt-4">
+              Write a Review
+            </Button>
           </CardContent>
         </Card>
 
@@ -93,10 +132,12 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-primary">{review.user.name.charAt(0)}</span>
+                      <span className="text-sm font-medium text-primary">
+                        {review.profiles?.full_name?.charAt(0) || "A"}
+                      </span>
                     </div>
                     <div>
-                      <p className="font-medium">{review.user.name}</p>
+                      <p className="font-medium">{review.profiles?.full_name || "Anonymous"}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(review.created_at).toLocaleDateString()}
                       </p>
@@ -115,7 +156,12 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 <p className="text-muted-foreground mb-4 leading-relaxed">{review.body}</p>
 
                 <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={() => handleHelpfulClick(review.id, review.helpful_count)}
+                  >
                     <ThumbsUp className="h-4 w-4 mr-1" />
                     Helpful ({review.helpful_count})
                   </Button>
@@ -123,12 +169,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               </CardContent>
             </Card>
           ))}
-
-          <div className="text-center">
-            <Button variant="outline" className="bg-transparent">
-              Load More Reviews
-            </Button>
-          </div>
         </div>
       </div>
     </section>

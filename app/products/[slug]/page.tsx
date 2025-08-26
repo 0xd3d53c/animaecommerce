@@ -12,11 +12,13 @@ async function getProduct(slug: string) {
   const supabase = await createClient()
   const { data: product } = await supabase
     .from("products")
-    .select(`
+    .select(
+      `
       *,
       categories(name, slug),
       product_media(storage_path, alt_text, media_type, sort_order, is_primary)
-    `)
+    `
+    )
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -24,15 +26,51 @@ async function getProduct(slug: string) {
   return product
 }
 
+async function getProductReviews(productId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(
+      `
+      id,
+      rating,
+      title,
+      body,
+      created_at,
+      helpful_count,
+      profiles ( full_name, avatar_url )
+    `
+    )
+    .eq("product_id", productId)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching product reviews:", error)
+    return []
+  }
+
+  // FIX: The Supabase client may incorrectly type the 'profiles' join as an array.
+  // We will map the result to ensure 'profiles' is a single object, matching the component's prop type.
+  const reviews = data?.map((review) => ({
+    ...review,
+    profiles: Array.isArray(review.profiles) ? review.profiles[0] || null : review.profiles,
+  }))
+
+  return reviews || []
+}
+
 async function getRelatedProducts(categoryId: string, currentProductId: string) {
   const supabase = await createClient()
   const { data: products } = await supabase
     .from("products")
-    .select(`
+    .select(
+      `
       *,
       categories(name, slug),
       product_media(storage_path, alt_text, is_primary)
-    `)
+    `
+    )
     .eq("category_id", categoryId)
     .neq("id", currentProductId)
     .eq("status", "published")
@@ -41,19 +79,17 @@ async function getRelatedProducts(categoryId: string, currentProductId: string) 
   return products || []
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
-  const { slug } = await params
-  const product = await getProduct(slug)
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+  const product = await getProduct(params.slug)
 
   if (!product) {
     notFound()
   }
 
-  const relatedProducts = await getRelatedProducts(product.category_id, product.id)
+  const [relatedProducts, reviews] = await Promise.all([
+    getRelatedProducts(product.category_id, product.id),
+    getProductReviews(product.id),
+  ])
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,7 +121,7 @@ export default async function ProductPage({
         </div>
 
         {/* Reviews */}
-        <ProductReviews productId={product.id} />
+        <ProductReviews reviews={reviews} productId={product.id} />
 
         {/* Related Products */}
         <RelatedProducts products={relatedProducts} />

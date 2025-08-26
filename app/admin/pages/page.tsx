@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/auth"
+import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,63 +7,31 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FileText, Plus, Search, Edit, Eye, Trash2 } from "lucide-react"
 
-// Mock pages data - in production this would come from Supabase
-const mockPages = [
-  {
-    id: "1",
-    title: "About Us",
-    slug: "about",
-    status: "published",
-    lastModified: "2024-01-15",
-    author: "Admin",
-  },
-  {
-    id: "2",
-    title: "Shipping Policy",
-    slug: "shipping",
-    status: "published",
-    lastModified: "2024-01-14",
-    author: "Admin",
-  },
-  {
-    id: "3",
-    title: "Terms & Conditions",
-    slug: "terms",
-    status: "published",
-    lastModified: "2024-01-13",
-    author: "Admin",
-  },
-  {
-    id: "4",
-    title: "Privacy Policy",
-    slug: "privacy",
-    status: "draft",
-    lastModified: "2024-01-12",
-    author: "Admin",
-  },
-  {
-    id: "5",
-    title: "FAQ",
-    slug: "faq",
-    status: "published",
-    lastModified: "2024-01-11",
-    author: "Admin",
-  },
-  {
-    id: "6",
-    title: "Contact Us",
-    slug: "contact",
-    status: "published",
-    lastModified: "2024-01-10",
-    author: "Admin",
-  },
-]
+async function getPages() {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("pages").select("*")
+
+  if (error) {
+    console.error("Error fetching pages:", error)
+    return []
+  }
+
+  return data.map((page) => ({
+    id: page.id,
+    title: page.title,
+    slug: page.slug,
+    status: page.is_published ? "published" : "draft",
+    lastModified: new Date(page.updated_at).toLocaleDateString(),
+    author: "Admin", // You can join with profiles table to get the actual author
+  }))
+}
 
 export default async function AdminPagesPage() {
   await requireAdmin()
+  const pages = await getPages()
 
-  const publishedPages = mockPages.filter((page) => page.status === "published").length
-  const draftPages = mockPages.filter((page) => page.status === "draft").length
+  const publishedPages = pages.filter((page) => page.status === "published").length
+  const draftPages = pages.filter((page) => page.status === "draft").length
 
   return (
     <div className="space-y-6">
@@ -85,7 +54,7 @@ export default async function AdminPagesPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{mockPages.length}</div>
+            <div className="text-2xl font-bold text-primary">{pages.length}</div>
           </CardContent>
         </Card>
 
@@ -136,7 +105,7 @@ export default async function AdminPagesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockPages.map((page) => (
+              {pages.map((page) => (
                 <TableRow key={page.id}>
                   <TableCell className="font-medium">{page.title}</TableCell>
                   <TableCell className="text-muted-foreground">/{page.slug}</TableCell>

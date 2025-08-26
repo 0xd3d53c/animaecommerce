@@ -3,35 +3,17 @@ import { SiteFooter } from "@/components/layout/site-footer"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/server"
 
-const categories = [
-  {
-    name: "Sarees",
-    description: "Traditional and contemporary sarees",
-    image: "/elegant-saree-collection.png",
-    count: 45,
-  },
-  {
-    name: "Kurtas",
-    description: "Comfortable and stylish kurtas",
-    image: "/modern-kurta-designs.png",
-    count: 32,
-  },
-  {
-    name: "Accessories",
-    description: "Traditional jewelry and accessories",
-    image: "/traditional-accessories.png",
-    count: 28,
-  },
-  {
-    name: "Home Decor",
-    description: "Beautiful home decoration items",
-    image: "/home-decor-items.png",
-    count: 19,
-  },
-]
+async function getCategories() {
+  const supabase = await createClient()
+  const { data: categories } = await supabase.from("categories").select("*").eq("is_active", true)
+  return categories || []
+}
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const categories = await getCategories()
+
   return (
     <>
       <SiteHeader />
@@ -46,11 +28,11 @@ export default function CategoriesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((category) => (
-              <Link key={category.name} href={`/products?category=${category.name.toLowerCase()}`}>
+              <Link key={category.name} href={`/products?category=${category.slug}`}>
                 <Card className="group hover:shadow-lg transition-shadow cursor-pointer">
                   <div className="aspect-video overflow-hidden rounded-t-lg">
                     <img
-                      src={category.image || "/placeholder.svg"}
+                      src={category.image_url || "/placeholder.svg"}
                       alt={category.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
@@ -58,7 +40,7 @@ export default function CategoriesPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-xl font-semibold">{category.name}</h3>
-                      <Badge variant="secondary">{category.count} items</Badge>
+                      {/* You can add a count of products in each category here */}
                     </div>
                     <p className="text-muted-foreground">{category.description}</p>
                   </CardContent>
