@@ -6,22 +6,26 @@ import { CartButton } from "@/components/cart/cart-button"
 import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
     <header className="border-b border-primary/10 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-xl">A</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-primary">Anima</h1>
-            <p className="text-xs text-muted-foreground">E-commerce Store</p>
-          </div>
+      <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+        {/* START: MODIFIED LOGO SECTION */}
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/_logo.png"
+            alt="Anima The Ethic Store Logo"
+            width={120}
+            height={40}
+            className="object-contain"
+            priority
+          />
         </Link>
+        {/* END: MODIFIED LOGO SECTION */}
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">

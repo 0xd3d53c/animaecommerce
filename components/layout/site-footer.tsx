@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 
 export function SiteFooter() {
   const currentYear = new Date().getFullYear()
@@ -8,16 +9,18 @@ export function SiteFooter() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-primary-foreground rounded-lg flex items-center justify-center">
-                <span className="text-primary font-bold text-lg">A</span>
-              </div>
-              <div>
-                <h3 className="font-bold">Anima</h3>
-                <p className="text-xs opacity-80">E-commerce Store</p>
-              </div>
+            {/* START: MODIFIED LOGO SECTION */}
+            <div className="mb-4">
+              <Image
+                src="/_logo.png"
+                alt="Anima The Ethic Store Logo"
+                width={150}
+                height={50}
+                className="object-contain"
+              />
             </div>
             <p className="text-sm opacity-80">Your trusted online shopping destination for quality products.</p>
+            {/* END: MODIFIED LOGO SECTION */}
           </div>
           <div>
             <h4 className="font-semibold mb-4">Shop</h4>
