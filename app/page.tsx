@@ -1,46 +1,55 @@
-import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import Image from "next/image"
-import Link from "next/link"
-import { ArrowRight, Star, Truck, Shield } from "lucide-react"
-import { SiteHeader } from "@/components/layout/site-header"
-import { SiteFooter } from "@/components/layout/site-footer"
+import { createClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Star, Truck, Shield } from "lucide-react";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 async function getFeaturedProducts() {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const { data: products } = await supabase
     .from("products")
-    .select(`
+    .select(
+      `
       *,
       categories(name, slug),
       product_media(storage_path, alt_text, is_primary)
-    `)
+    `
+    )
     .eq("status", "published")
     .eq("is_featured", true)
-    .limit(6)
+    .limit(6);
 
-  return products || []
+  return products || [];
 }
 
 async function getCategories() {
-  const supabase = await createClient()
-  const { data: categories } = await supabase.from("categories").select("*").eq("is_active", true).order("sort_order")
+  const supabase = await createClient();
+  const { data: categories } = await supabase.from("categories").select("*").eq("is_active", true).order("sort_order");
 
-  return categories || []
+  return categories || [];
 }
 
 export default async function HomePage() {
-  const [featuredProducts, categories] = await Promise.all([getFeaturedProducts(), getCategories()])
+  const [featuredProducts, categories] = await Promise.all([getFeaturedProducts(), getCategories()]);
 
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary/5 to-accent/5 py-20">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative py-20 overflow-hidden">
+        <Image
+          src="/TRENDLIS.png"
+          alt="Premium products background"
+          fill
+          className="object-cover -z-10 blur-sm brightness-90"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 -z-10"></div>
+        <div className="container mx-auto px-4 text-center relative z-10">
           <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
             Premium Quality
             <br />
@@ -128,7 +137,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProducts.map((product) => {
               const primaryImage =
-                product.product_media?.find((media: any) => media.is_primary) || product.product_media?.[0]
+                product.product_media?.find((media: any) => media.is_primary) || product.product_media?.[0];
               return (
                 <Link key={product.id} href={`/products/${product.slug}`}>
                   <Card className="group hover:shadow-xl transition-all duration-300 border-primary/10">
@@ -167,7 +176,7 @@ export default async function HomePage() {
                     </CardContent>
                   </Card>
                 </Link>
-              )
+              );
             })}
           </div>
           <div className="text-center mt-12">
@@ -183,5 +192,5 @@ export default async function HomePage() {
       {/* Footer */}
       <SiteFooter />
     </div>
-  )
+  );
 }
