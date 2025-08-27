@@ -109,7 +109,7 @@ export default async function HomePage() {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-primary mb-4">Categories</h2>
+            <h2 className="text-3xl font-bold text-primary mb-4">Browse by Categories</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Explore our curated collection organized by category for easy shopping.
             </p>
@@ -119,13 +119,13 @@ export default async function HomePage() {
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {subCategories.map((category: Category) => (
                   <Link key={category.id} href={`/products?category=${category.slug}`}>
-                    <Card className="group h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                      <div className="relative h-48 w-full">
+                    <Card className="group h-100 overflow-hidden relative">
+                      <div className="relative h-85 w-full">
                         <Image
                           src={category.image_url || "/placeholder.svg"}
                           alt={category.name}
                           fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="object-cover "
                         />
                       </div>
                       <CardContent className="p-4 flex flex-col flex-grow text-center">

@@ -13,10 +13,11 @@ export function SiteFooter() {
             <div className="mb-4">
               <Image
                 src="/_logo.png"
-                alt="Anima The Ethic Store Logo"
+                alt="Anima The Ethic Store "
                 width={150}
                 height={50}
-                className="object-contain"
+                className="h-auto object-contain"
+                priority
               />
             </div>
             <p className="text-sm opacity-80">Your trusted online shopping destination for quality products.</p>

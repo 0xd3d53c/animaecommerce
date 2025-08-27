@@ -21,7 +21,7 @@ export function SiteHeader() {
             alt="Anima The Ethic Store Logo"
             width={120}
             height={40}
-            className="object-contain"
+            className="h-auto  object-contain"
             priority
           />
         </Link>
