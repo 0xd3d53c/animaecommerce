@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
-import { getCart, addToCart as addToCartApi, updateCartItem, removeFromCart, clearCart, type Cart } from "@/lib/cart-client"
+import { getCart, addToCart as addToCartApi, updateCartItem, removeFromCart, clearCart as clearCartApi, type Cart } from "@/lib/cart-client"
 import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 interface CartContextType {
   cart: Cart | null
@@ -14,6 +14,7 @@ interface CartContextType {
   removeItem: (itemId: string) => Promise<void>
   clearCart: () => Promise<void>
   refreshCart: () => Promise<void>
+  buyNow: (productId: string, quantity?: number, variantId?: string) => Promise<void>
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -22,6 +23,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const router = useRouter()
 
   const refreshCart = async () => {
     try {
@@ -46,6 +48,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       toast({
         title: "Error",
         description: "Failed to add item to cart.",
+        variant: "destructive",
+      })
+    }
+  }
+  
+  const buyNow = async (productId: string, quantity = 1, variantId?: string) => {
+    try {
+      await clearCartApi()
+      await addToCartApi(productId, quantity, variantId)
+      await refreshCart()
+      router.push("/checkout")
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not proceed to checkout. Please try again.",
         variant: "destructive",
       })
     }
@@ -83,7 +100,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCartHandler = async () => {
     try {
-      await clearCart()
+      await clearCartApi()
       await refreshCart()
       toast({
         title: "Cart cleared",
@@ -112,6 +129,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removeItem,
         clearCart: clearCartHandler,
         refreshCart,
+        buyNow,
       }}
     >
       {children}

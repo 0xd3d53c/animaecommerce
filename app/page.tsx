@@ -9,6 +9,19 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 
+// Define a type for your category data for better type safety
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  parent: {
+    name: string;
+    slug: string;
+  } | null;
+  image_url: string | null;
+}
+
 async function getFeaturedProducts() {
   const supabase = await createClient();
   const { data: products } = await supabase
@@ -29,20 +42,27 @@ async function getFeaturedProducts() {
 
 async function getCategories() {
   const supabase = await createClient();
-  const { data: categories } = await supabase.from("categories").select("id, name, slug, description, image_url").eq("is_active", true).order("sort_order");
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("*, parent:parent_id(name, slug)")
+    .eq("is_active", true)
+    .order("sort_order");
 
-  return categories || [];
+  // Group categories by their parent
+  const groupedCategories = (categories as Category[] || []).reduce((acc: Record<string, Category[]>, category: Category) => {
+    const parentName = category.parent?.name || "Other Categories";
+    if (!acc[parentName]) {
+      acc[parentName] = [];
+    }
+    acc[parentName].push(category);
+    return acc;
+  }, {});
+
+  return groupedCategories;
 }
 
 export default async function HomePage() {
   const [featuredProducts, categories] = await Promise.all([getFeaturedProducts(), getCategories()]);
-
-  const categoryImageMap: { [key: string]: string } = {
-    'mekhela-chador': '/elegant-saree-collection.png',
-    'ethnic-wear': '/modern-kurta-designs.png',
-    'gamusa': '/traditional-accessories.png',
-    'buwa-magur': '/designer-palazzo-set.png',
-  };
 
   const carouselSlides = [
     {
@@ -94,33 +114,36 @@ export default async function HomePage() {
               Explore our curated collection organized by category for easy shopping.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <Link key={category.id} href={`/categories/${category.slug}`}>
-                <Card className="group h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                  <div className="relative h-48 w-full">
-                    <Image
-                      src={categoryImageMap[category.slug] || "/placeholder.svg"}
-                      alt={category.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  {/* START: MODIFIED CARD CONTENT */}
-                  <CardContent className="p-4 flex flex-col flex-grow text-center">
-                    <div className="flex-grow flex flex-col justify-center">
-                        <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
-                    </div>
-                    <Button variant="outline" className="w-full mt-4 bg-transparent">
-                      View Products
-                    </Button>
-                  </CardContent>
-                  {/* END: MODIFIED CARD CONTENT */}
-                </Card>
-              </Link>
-            ))}
-          </div>
+          {Object.entries(categories).map(([parentName, subCategories]) => (
+            <div key={parentName} className="mb-12">
+              <h3 className="text-2xl font-bold text-primary mb-6">{parentName}</h3>
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {subCategories.map((category: Category) => (
+                  <Link key={category.id} href={`/products?category=${category.slug}`}>
+                    <Card className="group h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                      <div className="relative h-48 w-full">
+                        <Image
+                          src={category.image_url || "/placeholder.svg"}
+                          alt={category.name}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                      <CardContent className="p-4 flex flex-col flex-grow text-center">
+                        <div className="flex-grow flex flex-col justify-center">
+                            <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
+                        </div>
+                        <Button variant="outline" className="w-full mt-4 bg-transparent">
+                          View Products
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -146,7 +169,7 @@ export default async function HomePage() {
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                       <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                        {product.badges?.map((badge: string) => (
+                        {(product.badges || []).map((badge: string) => (
                           <Badge key={badge} variant="secondary" className="bg-white/90 text-primary">
                             {badge.replace("_", " ")}
                           </Badge>

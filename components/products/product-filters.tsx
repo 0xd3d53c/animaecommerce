@@ -5,27 +5,23 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 
 interface FilterOptions {
   categories: Array<{ name: string; slug: string }>
-  artisans: Array<{ name: string }>
 }
 
-interface ProductFiltersProps {
-  categories: FilterOptions["categories"]
-  artisans: FilterOptions["artisans"]
-  currentFilters: any
-}
-
-export function ProductFilters({ categories, artisans, currentFilters }: ProductFiltersProps) {
+export function ProductFilters({ categories }: FilterOptions) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [minPrice, setMinPrice] = useState(currentFilters.min_price || "")
-  const [maxPrice, setMaxPrice] = useState(currentFilters.max_price || "")
+  const [priceRange, setPriceRange] = useState([
+    parseInt(searchParams.get("min_price") || "0", 10),
+    parseInt(searchParams.get("max_price") || "50000", 10),
+  ])
 
-  const updateFilter = (key: string, value: string | null) => {
+  const handleFilterChange = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value) {
       params.set(key, value)
@@ -35,17 +31,12 @@ export function ProductFilters({ categories, artisans, currentFilters }: Product
     router.push(`/products?${params.toString()}`)
   }
 
-  const handlePriceFilter = () => {
+  const handlePriceChange = (value: number[]) => {
+    setPriceRange(value)
     const params = new URLSearchParams(searchParams.toString())
-    if (minPrice) params.set("min_price", minPrice)
-    else params.delete("min_price")
-    if (maxPrice) params.set("max_price", maxPrice)
-    else params.delete("max_price")
+    params.set("min_price", value[0].toString())
+    params.set("max_price", value[1].toString())
     router.push(`/products?${params.toString()}`)
-  }
-
-  const clearFilters = () => {
-    router.push("/products")
   }
 
   return (
@@ -63,8 +54,8 @@ export function ProductFilters({ categories, artisans, currentFilters }: Product
                 <div key={category.slug} className="flex items-center space-x-2">
                   <Checkbox
                     id={category.slug}
-                    checked={currentFilters.category === category.slug}
-                    onCheckedChange={(checked) => updateFilter("category", checked ? category.slug : null)}
+                    checked={searchParams.get("category") === category.slug}
+                    onCheckedChange={(checked) => handleFilterChange("category", checked ? category.slug : null)}
                   />
                   <Label htmlFor={category.slug} className="text-sm">
                     {category.name}
@@ -77,47 +68,37 @@ export function ProductFilters({ categories, artisans, currentFilters }: Product
           {/* Price Range */}
           <div>
             <h4 className="font-medium mb-3">Price Range</h4>
-            <div className="space-y-2">
-              <Input
-                placeholder="Min price"
-                type="number"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-              />
-              <Input
-                placeholder="Max price"
-                type="number"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-              />
-              <Button onClick={handlePriceFilter} variant="outline" size="sm" className="w-full bg-transparent">
-                Apply Price Filter
-              </Button>
+            <Slider
+              defaultValue={[0, 50000]}
+              max={50000}
+              step={100}
+              value={priceRange}
+              onValueChange={handlePriceChange}
+            />
+            <div className="flex justify-between text-sm text-muted-foreground mt-2">
+              <span>₹{priceRange[0]}</span>
+              <span>₹{priceRange[1]}</span>
             </div>
           </div>
 
-          {/* Artisans */}
+          {/* Ratings */}
           <div>
-            <h4 className="font-medium mb-3">Artisans</h4>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {artisans.map((artisan) => (
-                <div key={artisan.name} className="flex items-center space-x-2">
+            <h4 className="font-medium mb-3">Ratings</h4>
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map((rating) => (
+                <div key={rating} className="flex items-center space-x-2">
                   <Checkbox
-                    id={artisan.name}
-                    checked={currentFilters.artisan === artisan.name}
-                    onCheckedChange={(checked) => updateFilter("artisan", checked ? artisan.name : null)}
+                    id={`rating-${rating}`}
+                    checked={searchParams.get("rating") === rating.toString()}
+                    onCheckedChange={(checked) => handleFilterChange("rating", checked ? rating.toString() : null)}
                   />
-                  <Label htmlFor={artisan.name} className="text-sm">
-                    {artisan.name}
+                  <Label htmlFor={`rating-${rating}`} className="text-sm">
+                    {rating} stars & up
                   </Label>
                 </div>
               ))}
             </div>
           </div>
-
-          <Button onClick={clearFilters} variant="outline" className="w-full bg-transparent">
-            Clear All Filters
-          </Button>
         </CardContent>
       </Card>
     </div>
