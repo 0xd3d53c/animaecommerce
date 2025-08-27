@@ -109,14 +109,13 @@ export default async function HomePage() {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-primary mb-4">Shop by Category</h2>
+            <h2 className="text-3xl font-bold text-primary mb-4">Categories</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Explore our curated collection organized by category for easy shopping.
             </p>
           </div>
           {Object.entries(categories).map(([parentName, subCategories]) => (
             <div key={parentName} className="mb-12">
-              <h3 className="text-2xl font-bold text-primary mb-6">{parentName}</h3>
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {subCategories.map((category: Category) => (
                   <Link key={category.id} href={`/products?category=${category.slug}`}>
